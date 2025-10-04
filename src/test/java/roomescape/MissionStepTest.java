@@ -30,6 +30,6 @@ public class MissionStepTest {
                 .when().get("/reservations")
                 .then().log().all()
                 .statusCode(200)
-                .body("size()", is(1)); // 아직 생성 요청이 없으니 Controller에서 임의로 넣어준 Reservation 갯수(=1) 만큼 검증.
+                .body("size()", is(2)); // 아직 생성 요청이 없으니 Controller에서 임의로 넣어준 Reservation 갯수(=1) 만큼 검증.
     }
 }

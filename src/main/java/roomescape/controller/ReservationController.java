@@ -26,8 +26,9 @@ public class ReservationController {
     }
 
     @GetMapping("/reservations")
-    public ResponseEntity<List<Reservation>> reservations(){
+    @ResponseBody
+    public List<Reservation> reservations(){
 
-        return ResponseEntity.ok(reservations);
+        return reservations;
     }
 }
