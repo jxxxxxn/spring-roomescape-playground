@@ -3,6 +3,7 @@ package roomescape.controller;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -20,12 +21,17 @@ public class ReservationController {
 
     //AtomicLong: Long 자료형 가지는 Wrapping 클래스. incrementAndGet(): ++x
     private AtomicLong index = new AtomicLong(0);
-    private List<ReservationReq> reservations = new ArrayList<>();
+    private List<ReservationReq> reservations1 = new ArrayList<>();
+    private JdbcTemplate jdbcTemplate;
+
+    public ReservationController(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
+    }
     
     @GetMapping("/reservation")
     public String reservation(Model model){
 
-        model.addAttribute(reservations);
+        model.addAttribute(reservations1);
         return "reservation";
     }
 
@@ -33,7 +39,18 @@ public class ReservationController {
     @GetMapping("/reservations")
     @ResponseBody
     public List<ReservationReq> reservations(){
-
+        String sql="SELECT * from reservation";
+        List<ReservationReq> reservations=jdbcTemplate.query(
+                sql,
+                (resultSet,rowNum)->{
+                    ReservationReq reservation = new ReservationReq(
+                            resultSet.getLong("id"),
+                            resultSet.getString("name"),
+                            resultSet.getString("date"),
+                            resultSet.getString("time")
+                    );
+                    return reservation;
+                });
         return reservations;
     }
 
@@ -46,7 +63,7 @@ public class ReservationController {
             throw new InvalidRequestReservationException("필요한 인자가 없습니다.");
         }
         ReservationReq newReservation =new ReservationReq(index.incrementAndGet(),reservation.getName(),reservation.getDate(),reservation.getTime());
-        reservations.add(newReservation);
+        reservations1.add(newReservation);
 
         // ResponseEntity 사용하면 header 명시적으로 지정하지 않아도 된다고 한다.
         response.setHeader("Location", "/reservations/" + newReservation.getId());
@@ -58,11 +75,11 @@ public class ReservationController {
     @ResponseBody
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteReservation(@PathVariable Long id){
-        ReservationReq delete=reservations.stream().filter(ReservationReq -> id.equals(ReservationReq.getId())).findAny().orElse(null);
+        ReservationReq delete=reservations1.stream().filter(ReservationReq -> id.equals(ReservationReq.getId())).findAny().orElse(null);
         if(delete==null){
             throw new NotFoundReservationException("삭제할 예약이 없습니다");
         }
-        reservations.remove(delete);
+        reservations1.remove(delete);
     }
 
 
