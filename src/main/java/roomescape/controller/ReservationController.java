@@ -62,11 +62,15 @@ public class ReservationController {
         if(reservation.getName().isEmpty()||reservation.getDate().isEmpty()||reservation.getTime().isEmpty()){
             throw new InvalidRequestReservationException("필요한 인자가 없습니다.");
         }
-        ReservationReq newReservation =new ReservationReq(index.incrementAndGet(),reservation.getName(),reservation.getDate(),reservation.getTime());
-        reservations1.add(newReservation);
+
+        String sql="INSERT INTO reservation(name, date, time) VALUES (?,?,?)";
+        jdbcTemplate.update(sql,reservation.getName(),reservation.getDate(),reservation.getTime());
+        String getIdSql="SELECT LAST_INSERT_ID()"; //해당 구문 사용 위해 application.properties에 MODE=MySQL 추가함
+        Long id=jdbcTemplate.queryForObject(getIdSql, Long.class);
+        ReservationReq newReservation =new ReservationReq(id,reservation.getName(),reservation.getDate(),reservation.getTime());
 
         // ResponseEntity 사용하면 header 명시적으로 지정하지 않아도 된다고 한다.
-        response.setHeader("Location", "/reservations/" + newReservation.getId());
+        response.setHeader("Location", "/reservations/" + id);
         return newReservation;
     }
 
@@ -75,12 +79,13 @@ public class ReservationController {
     @ResponseBody
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteReservation(@PathVariable Long id){
-        ReservationReq delete=reservations1.stream().filter(ReservationReq -> id.equals(ReservationReq.getId())).findAny().orElse(null);
-        if(delete==null){
+
+        String sql="DELETE FROM reservation WHERE id=?";
+        int rowCount=jdbcTemplate.update(sql,id);
+        if(rowCount==0){
             throw new NotFoundReservationException("삭제할 예약이 없습니다");
         }
-        reservations1.remove(delete);
-    }
 
+    }
 
 }
