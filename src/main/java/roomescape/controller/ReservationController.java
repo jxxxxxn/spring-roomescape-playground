@@ -32,7 +32,7 @@ public class ReservationController {
     public String reservation(Model model){
 
         model.addAttribute(reservations1);
-        return "reservation";
+        return "new-reservation";
     }
 
     //예약 조회
@@ -47,7 +47,7 @@ public class ReservationController {
                             resultSet.getLong("id"),
                             resultSet.getString("name"),
                             resultSet.getString("date"),
-                            resultSet.getString("time")
+                            resultSet.getTime("time")
                     );
                     return reservation;
                 });
@@ -59,11 +59,17 @@ public class ReservationController {
     @ResponseBody
     @ResponseStatus(HttpStatus.CREATED)
     public ReservationReq addReservation(@RequestBody ReservationAddReq reservation, HttpServletResponse response){
-        if(reservation.getName().isEmpty()||reservation.getDate().isEmpty()||reservation.getTime().isEmpty()){
+        if(reservation.getName().isEmpty()||reservation.getDate().isEmpty()){
             throw new InvalidRequestReservationException("필요한 인자가 없습니다.");
         }
 
-        String sql="INSERT INTO reservation(name, date, time) VALUES (?,?,?)";
+        String sql="SELECT \n" +
+                    "r.id as reservation_id, \n" +
+                    "r.name, \n" +
+                    "r.date, \n" +
+                    "t.id as time_id, \n" +
+                    "t.time as time_value \n" +
+                    "FROM reservation as r inner join time as t on r.time_id = t.id\n";
         jdbcTemplate.update(sql,reservation.getName(),reservation.getDate(),reservation.getTime());
         String getIdSql="SELECT LAST_INSERT_ID()"; //해당 구문 사용 위해 application.properties에 MODE=MySQL 추가함
         Long id=jdbcTemplate.queryForObject(getIdSql, Long.class);

@@ -3,6 +3,8 @@ package roomescape.dto;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import java.sql.Time;
+
 @Getter
 @AllArgsConstructor //기본 생성자 자동 생성
 public class ReservationReq {
@@ -11,7 +13,7 @@ public class ReservationReq {
     private Long id;
     private String name;
     private String date; //우선 String으로.. 차후 Date로 형변환 필요하면 교체..
-    private String time; //동일!!
+    private Time time; //동일!!
 
 
 }
